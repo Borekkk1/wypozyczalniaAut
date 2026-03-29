@@ -205,12 +205,13 @@ class _BookingFlowState extends State<BookingFlow>
           .update({'status': 'niedostepny'})
           .eq('id', carId);
 
-      // Powiadom rodzica o sukcesie (odświeżenie listy)
-      widget.onSuccess?.call();
-
+      // Najpierw pokaż ekran sukcesu
       await _animCtrl.reverse();
       setState(() => _step = 2);
       _animCtrl.forward();
+
+      // Odśwież listę w tle
+      widget.onSuccess?.call();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

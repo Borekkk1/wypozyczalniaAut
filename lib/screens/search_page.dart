@@ -221,24 +221,27 @@ class _SearchPageState extends State<SearchPage>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final pad = isMobile ? 16.0 : 40.0;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(40, 32, 40, 40),
+      padding: EdgeInsets.fromLTRB(pad, isMobile ? 20 : 32, pad, pad),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Nagłówek
-          const Text('Wyszukaj auto', style: TextStyle(
-            color: C.text, fontSize: 26,
+          Text('Wyszukaj auto', style: TextStyle(
+            color: C.text, fontSize: isMobile ? 22 : 26,
             fontWeight: FontWeight.w700, letterSpacing: -0.5)),
           const SizedBox(height: 6),
           const Text('Znajdź idealne auto dopasowane do Twoich potrzeb',
-            style: TextStyle(color: C.textSub, fontSize: 14,
+            style: TextStyle(color: C.textSub, fontSize: 13,
                 fontWeight: FontWeight.w300)),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
 
           // Karta filtrów
           Container(
-            padding: const EdgeInsets.all(28),
+            padding: EdgeInsets.all(isMobile ? 16 : 28),
             decoration: BoxDecoration(
               color: C.card,
               borderRadius: BorderRadius.circular(16),
@@ -257,7 +260,7 @@ class _SearchPageState extends State<SearchPage>
                           label: 'MARKA',
                           value: _marka,
                           items: _marki,
-                          hint: 'Wszystkie marki',
+                          hint: 'Wszystkie',
                           onChanged: (v) => setState(() {
                             _marka = v; _model = null;
                           }),
@@ -405,17 +408,18 @@ class _SearchPageState extends State<SearchPage>
                       )))
                   else
                     LayoutBuilder(builder: (_, c) {
-                      final cols = c.maxWidth > 1100 ? 4
-                          : c.maxWidth > 750 ? 3 : 2;
+                      final isMobile = c.maxWidth < 500;
+                      final cols = isMobile ? 2
+                          : (c.maxWidth > 1100 ? 4 : 3);
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate:
                             SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: cols,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 0.70),
+                          crossAxisSpacing: isMobile ? 8 : 12,
+                          mainAxisSpacing: isMobile ? 8 : 12,
+                          childAspectRatio: isMobile ? 0.56 : 0.70),
                         itemCount: _results.length,
                         itemBuilder: (ctx, i) =>
                             _SearchTile(group: _results[i]),
@@ -598,30 +602,60 @@ class _Row2 extends StatelessWidget {
   final List<Widget> children;
   const _Row2({required this.children});
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Expanded(child: children[0]),
-      const SizedBox(width: 20),
-      Expanded(child: children[1]),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          children[0],
+          const SizedBox(height: 14),
+          children[1],
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: children[0]),
+        const SizedBox(width: 20),
+        Expanded(child: children[1]),
+      ],
+    );
+  }
 }
 
 class _Row3 extends StatelessWidget {
   final List<Widget> children;
   const _Row3({required this.children});
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Expanded(child: children[0]),
-      const SizedBox(width: 16),
-      Expanded(child: children[1]),
-      const SizedBox(width: 16),
-      Expanded(child: children[2]),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          children[0],
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(child: children[1]),
+            const SizedBox(width: 12),
+            Expanded(child: children[2]),
+          ]),
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: children[0]),
+        const SizedBox(width: 16),
+        Expanded(child: children[1]),
+        const SizedBox(width: 16),
+        Expanded(child: children[2]),
+      ],
+    );
+  }
 }
 
 class _DropField extends StatelessWidget {

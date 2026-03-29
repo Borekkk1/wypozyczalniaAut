@@ -301,14 +301,17 @@ class _FilterBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final pad = isMobile ? 16.0 : 28.0;
+    return Container(
+    padding: EdgeInsets.fromLTRB(pad, isMobile ? 16 : 24, pad, 0),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        const Text('Wszystkie auta', style: TextStyle(
-          color: C.text, fontSize: 22,
+        Text('Wszystkie auta', style: TextStyle(
+          color: C.text, fontSize: isMobile ? 18 : 22,
           fontWeight: FontWeight.w700, letterSpacing: -0.3)),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
           decoration: BoxDecoration(color: C.field,
@@ -317,26 +320,27 @@ class _FilterBar extends StatelessWidget {
           child: Text('$resultCount modeli', style: const TextStyle(
             color: C.textSub, fontSize: 11))),
       ]),
-      const SizedBox(height: 16),
+      const SizedBox(height: 14),
       Row(children: [
         Expanded(flex: 3,
           child: _SearchField(controller: searchCtrl,
             focused: searchFocused, onFocusChange: onFocusChange)),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         _FilterBtn(onTap: onAlphaTap, active: alpha != AlphaSort.none,
           tooltip: alpha == AlphaSort.none ? 'Sortuj A→Z'
               : (alpha == AlphaSort.az ? 'A→Z' : 'Z→A'),
           child: _AlphaIcon(state: alpha)),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         _FilterBtn(onTap: onPriceTap, active: price != PriceSort.none,
           tooltip: price == PriceSort.none ? 'Sortuj cenowo'
               : (price == PriceSort.asc ? 'Najtańsze' : 'Najdroższe'),
           child: _PriceIcon(state: price)),
       ]),
-      const SizedBox(height: 16),
+      const SizedBox(height: 14),
       Container(height: 1, color: C.divider),
     ]),
   );
+  }
 }
 
 class _SearchField extends StatelessWidget {
@@ -462,19 +466,21 @@ class _CarsGrid extends StatelessWidget {
   const _CarsGrid({required this.groups, this.onRefresh});
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (_, c) {
-      final cols = c.maxWidth > 1200 ? 4 : c.maxWidth > 800 ? 3 : 2;
-      return GridView.builder(
-        padding: const EdgeInsets.fromLTRB(28, 18, 28, 32),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: cols,
-          crossAxisSpacing: 12, mainAxisSpacing: 12,
-          childAspectRatio: 0.70),
-        itemCount: groups.length,
-        itemBuilder: (ctx, i) => _CarTile(
-            group: groups[i], onRefresh: onRefresh),
-      );
-    });
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final pad = isMobile ? 12.0 : 28.0;
+    final cols = isMobile ? 2
+        : (MediaQuery.of(context).size.width > 1200 ? 4 : 3);
+    return GridView.builder(
+      padding: EdgeInsets.fromLTRB(pad, 14, pad, 32),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: cols,
+        crossAxisSpacing: isMobile ? 8 : 12,
+        mainAxisSpacing: isMobile ? 8 : 12,
+        childAspectRatio: isMobile ? 0.56 : 0.70),
+      itemCount: groups.length,
+      itemBuilder: (ctx, i) => _CarTile(
+          group: groups[i], onRefresh: onRefresh),
+    );
   }
 }
 
@@ -885,11 +891,7 @@ class CarDetailState extends State<CarDetail> {
                           group: g,
                           selectedSztuka: _selectedSztuka,
                           onCancel: () => setState(() => _showBooking = false),
-                          onSuccess: () async {
-                            // Zamknij modal i odśwież listę
-                            if (context.mounted) {
-                              Navigator.of(context).pop();
-                            }
+                          onSuccess: () {
                             widget.onRefresh?.call();
                           },
                         )

@@ -183,38 +183,47 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
       backgroundColor: C.bg,
+      // Dolna nawigacja na mobile
+      bottomNavigationBar: isMobile ? _BottomNav(
+        page: _page,
+        loggedIn: _loggedIn,
+        username: _username,
+        onNav: _go,
+        onUserTap: _onUserTap,
+      ) : null,
       body: Stack(children: [
-        Row(
-          children: [
-            _Sidebar(
-              page: _page,
-              loggedIn: _loggedIn,
-              username: _username,
-              onNav: _go,
-              onUserTap: _onUserTap,
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 320),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.02, 0),
-                      end: Offset.zero,
-                    ).animate(anim),
-                    child: child,
-                  ),
+        Row(children: [
+          // Sidebar tylko na desktop
+          if (!isMobile) _Sidebar(
+            page: _page,
+            loggedIn: _loggedIn,
+            username: _username,
+            onNav: _go,
+            onUserTap: _onUserTap,
+          ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 320),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.02, 0),
+                    end: Offset.zero,
+                  ).animate(anim),
+                  child: child,
                 ),
-                child: _buildPage(),
               ),
+              child: _buildPage(),
             ),
-          ],
-        ),
+          ),
+        ]),
         if (_showWelcome)
           WelcomeOverlay(
               onDismiss: () => setState(() => _showWelcome = false)),
@@ -325,6 +334,160 @@ class _Sidebar extends StatelessWidget {
           const Spacer(),
           const SizedBox(height: 14),
         ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DOLNA NAWIGACJA (mobile)
+// ═══════════════════════════════════════════════════════════════════════
+class _BottomNav extends StatelessWidget {
+  final AppPage page;
+  final bool loggedIn;
+  final String username;
+  final ValueChanged<AppPage> onNav;
+  final VoidCallback onUserTap;
+
+  const _BottomNav({
+    required this.page, required this.loggedIn, required this.username,
+    required this.onNav, required this.onUserTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: C.sidebar,
+        border: const Border(top: BorderSide(color: C.sidebarBorder, width: 1)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom,
+      ),
+      child: Row(children: [
+        _BottomNavItem(
+          icon: Icons.search_rounded,
+          label: 'Szukaj',
+          active: page == AppPage.search,
+          onTap: () => onNav(AppPage.search),
+        ),
+        _BottomNavItem(
+          icon: Icons.directions_car_outlined,
+          label: 'Auta',
+          active: page == AppPage.cars,
+          onTap: () => onNav(AppPage.cars),
+        ),
+        _BottomNavItem(
+          icon: Icons.description_outlined,
+          label: 'Regulamin',
+          active: page == AppPage.terms,
+          onTap: () => onNav(AppPage.terms),
+        ),
+        _BottomNavItem(
+          icon: Icons.local_offer_outlined,
+          label: 'Cennik',
+          active: page == AppPage.pricing,
+          onTap: () => onNav(AppPage.pricing),
+        ),
+        // Konto / logowanie
+        Expanded(
+          child: GestureDetector(
+            onTap: onUserTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 32, height: 32,
+                    decoration: BoxDecoration(
+                      color: (page == AppPage.login || page == AppPage.account)
+                          ? C.card : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: loggedIn
+                            ? Colors.white.withOpacity(
+                                (page == AppPage.account) ? 0.3 : 0.15)
+                            : C.sidebarBorder,
+                        width: 1),
+                    ),
+                    child: Center(
+                      child: loggedIn
+                          ? Text(
+                              username.isNotEmpty
+                                  ? username[0].toUpperCase() : '?',
+                              style: TextStyle(
+                                color: (page == AppPage.account)
+                                    ? C.text : C.textSub,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600))
+                          : Icon(Icons.person_outline,
+                              color: (page == AppPage.login)
+                                  ? C.text : C.textMuted,
+                              size: 17),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    loggedIn ? username.split('').take(6).join() : 'Konto',
+                    style: TextStyle(
+                      color: (page == AppPage.login || page == AppPage.account)
+                          ? C.text : C.textMuted,
+                      fontSize: 9, fontWeight: FontWeight.w400),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+class _BottomNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  const _BottomNavItem({required this.icon, required this.label,
+      required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  color: active ? C.card : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: active
+                      ? Border.all(color: C.cardBorder, width: 1)
+                      : null,
+                ),
+                child: Center(
+                  child: Icon(icon,
+                    size: 18,
+                    color: active ? C.text : C.textMuted),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(label, style: TextStyle(
+                color: active ? C.text : C.textMuted,
+                fontSize: 9, fontWeight: FontWeight.w400)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -467,7 +630,7 @@ class _SearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(48),
+      padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 20 : 48),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -524,7 +687,7 @@ class _TermsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 40),
+      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < 600 ? 16 : 48, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 780),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -590,7 +753,7 @@ class _PricingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 40),
+      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < 600 ? 16 : 48, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 780),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1185,7 +1348,7 @@ class _LoginPageState extends State<_LoginPage> with TickerProviderStateMixin {
         position: _enterSlide,
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 48),
+            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < 600 ? 16 : 40, vertical: 32),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
@@ -1544,20 +1707,18 @@ class _AccountPageState extends State<_AccountPage> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(48),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Moje konto', style: TextStyle(
-              color: C.text, fontSize: 26,
-              fontWeight: FontWeight.w700, letterSpacing: -0.5)),
-            const SizedBox(height: 32),
+      padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 20 : 48),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Moje konto', style: TextStyle(
+            color: C.text, fontSize: 26,
+            fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+          const SizedBox(height: 32),
 
-            // Karta użytkownika
-            Container(
-              padding: const EdgeInsets.all(28),
+          // Karta użytkownika
+          Container(
+            padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 color: C.card,
                 borderRadius: BorderRadius.circular(16),
@@ -1753,7 +1914,6 @@ class _AccountPageState extends State<_AccountPage> {
             _DangerBtn(label: 'Wyloguj się', onTap: widget.onLogout),
           ],
         ),
-      ),
     );
   }
 }
