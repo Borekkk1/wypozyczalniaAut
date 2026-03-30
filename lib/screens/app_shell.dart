@@ -195,7 +195,7 @@ class _AppShellState extends State<AppShell> {
         onNav: _go,
         onUserTap: _onUserTap,
       ) : null,
-      body: Stack(children: [
+      body: SafeArea(bottom: false, child: Stack(children: [
         Row(children: [
           // Sidebar tylko na desktop
           if (!isMobile) _Sidebar(
@@ -228,6 +228,7 @@ class _AppShellState extends State<AppShell> {
           WelcomeOverlay(
               onDismiss: () => setState(() => _showWelcome = false)),
       ]),
+      ),
     );
   }
 

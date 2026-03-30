@@ -225,7 +225,9 @@ class _SearchPageState extends State<SearchPage>
     final pad = isMobile ? 16.0 : 40.0;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(pad, isMobile ? 20 : 32, pad, pad),
+      padding: EdgeInsets.fromLTRB(pad,
+          (isMobile ? 20 : 32) + MediaQuery.of(context).padding.top,
+          pad, pad),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
