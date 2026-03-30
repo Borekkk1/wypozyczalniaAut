@@ -1138,11 +1138,46 @@ class _ReserveButton extends StatefulWidget {
   State<_ReserveButton> createState() => _ReserveButtonState();
 }
 
-class _ReserveButtonState extends State<_ReserveButton> {
+class _ReserveButtonState extends State<_ReserveButton>
+    with SingleTickerProviderStateMixin {
   bool _hovered = false;
+  bool _showLoginMsg = false; // mobile: po kliknięciu
+
+  // Animacja trzęsienia
+  late final AnimationController _shakeCtrl;
+  late final Animation<double> _shakeAnim;
 
   bool get _loggedIn =>
       Supabase.instance.client.auth.currentUser != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    _shakeAnim = TweenSequence([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -8.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -8.0, end: 8.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 8.0, end: -6.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -6.0, end: 6.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6.0, end: 0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _shakeCtrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _shakeCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onTapNotLoggedIn() {
+    setState(() => _showLoginMsg = true);
+    _shakeCtrl.forward(from: 0);
+    // Reset po 3 sekundach
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _showLoginMsg = false);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1163,32 +1198,56 @@ class _ReserveButtonState extends State<_ReserveButton> {
 
     // Dostępne ale niezalogowany
     if (!_loggedIn) {
-      return MouseRegion(
-        cursor: SystemMouseCursors.forbidden,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit:  (_) => setState(() => _hovered = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          height: 48,
-          decoration: BoxDecoration(
-            color: _hovered
-                ? const Color(0xFF2A2A2A) : const Color(0xFF222222),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-                color: _hovered
-                    ? const Color(0xFF444444) : const Color(0xFF2A2A2A),
-                width: 1)),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(Icons.lock_outline,
-                color: _hovered ? C.textSub : C.textMuted, size: 14),
-            const SizedBox(width: 8),
-            Text(
-              _hovered ? 'ZALOGUJ SIĘ ABY ZAREZERWOWAĆ' : 'ZAREZERWUJ',
-              style: TextStyle(
-                color: _hovered ? C.textSub : C.textMuted,
-                fontSize: 11, fontWeight: FontWeight.w700,
-                letterSpacing: 1.4)),
-          ]),
+      final showLogin = _showLoginMsg || _hovered;
+      return AnimatedBuilder(
+        animation: _shakeAnim,
+        builder: (_, child) => Transform.translate(
+          offset: Offset(_shakeAnim.value, 0),
+          child: child,
+        ),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.forbidden,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit:  (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            onTap: _onTapNotLoggedIn,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 48,
+              decoration: BoxDecoration(
+                color: showLogin
+                    ? const Color(0xFF1E1E1E) : const Color(0xFF181818),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: showLogin
+                      ? const Color(0xFF3A3A3A) : const Color(0xFF252525),
+                  width: 1)),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      showLogin
+                          ? Icons.lock_outline
+                          : Icons.calendar_today_outlined,
+                      key: ValueKey(showLogin),
+                      color: showLogin ? C.textSub : C.textMuted,
+                      size: 14)),
+                  const SizedBox(width: 8),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Text(
+                      showLogin
+                          ? 'ZALOGUJ SIĘ ABY ZAREZERWOWAĆ'
+                          : 'ZAREZERWUJ',
+                      key: ValueKey(showLogin),
+                      style: TextStyle(
+                        color: showLogin ? C.textSub : C.textMuted,
+                        fontSize: 10, fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2))),
+                ]),
+            ),
+          ),
         ),
       );
     }
