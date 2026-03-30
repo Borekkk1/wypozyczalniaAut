@@ -574,39 +574,37 @@ class _CarTileState extends State<_CarTile> {
                 // Dane
                 Expanded(flex: 3,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
+                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Tytuł
                         Text('${g.marka} ${g.model}',
                           style: const TextStyle(color: C.text,
-                            fontSize: 13, fontWeight: FontWeight.w600),
+                            fontSize: 12, fontWeight: FontWeight.w600),
                           maxLines: 1, overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Text('${g.rok} · ${g.mocKm} KM',
                           style: const TextStyle(color: C.textMuted,
-                            fontSize: 11, fontWeight: FontWeight.w300)),
+                            fontSize: 10, fontWeight: FontWeight.w300)),
                         if (opisShort.isNotEmpty) ...[
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 3),
                           Text(opisShort,
                             style: const TextStyle(color: C.textSub,
-                              fontSize: 10, fontWeight: FontWeight.w300,
-                              height: 1.4),
+                              fontSize: 9, fontWeight: FontWeight.w300,
+                              height: 1.3),
                             maxLines: 2, overflow: TextOverflow.ellipsis),
                         ],
                         const Spacer(),
                         Row(children: [
-                          // Cena
                           Expanded(
                             child: Text(
                               g.minCena > 0
-                                  ? 'od ${g.minCena.toInt()} zł / dobę'
+                                  ? 'od ${g.minCena.toInt()} zł/dobę'
                                   : 'Wycena',
                               style: const TextStyle(color: C.text,
-                                fontSize: 11, fontWeight: FontWeight.w500),
+                                fontSize: 10, fontWeight: FontWeight.w500),
                               maxLines: 1, overflow: TextOverflow.ellipsis)),
-                          // Dostępność
                           AvailBadge(
                               dostepne: g.dostepne,
                               wszystkie: g.wszystkie,
